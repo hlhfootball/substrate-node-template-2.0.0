@@ -1,3 +1,12 @@
+# answer 1
+3个常用宏
+```
+decl_storage decl_module decl_event
+```
+3个常用的数据存储结构
+```
+单值 映射 双键映射
+```
 # Substrate Node Template
 
 A new FRAME-based Substrate node, ready for hacking :rocket:
