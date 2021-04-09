@@ -1,5 +1,6 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
+
 /// Edit this file to define custom logic or remove it if it is not needed.
 /// Learn more about FRAME and the core library of Substrate FRAME pallets:
 /// https://substrate.dev/docs/en/knowledgebase/runtime/frame
@@ -39,6 +40,9 @@ decl_event!(
         ClaimCreated(AccountId, Vec<u8>),
         /// Event emitted when a claim is revoked by the owner. [who, claim]
         ClaimRevoked(AccountId, Vec<u8>),
+		/// Event emitted when a claim is trasnfered by the owner to receiver. [who, claim]
+		ClaimTrans(AccountId, AccountId, Vec<u8>),
+
 	}
 );
 
@@ -109,6 +113,24 @@ decl_module! {
 		   // 声明抹掉后，发送事件
 		   Self::deposit_event(RawEvent::ClaimRevoked(sender, proof));
 	   }
-		
+
+	   #[weight = 10_000]
+	   fn transfer_claim(origin, receiver:T::AccountId, proof: Vec<u8>){
+		   //调用者的交易签名是否通过
+			let sender = ensure_signed(origin)?;
+		   //转移的存证是否存在链上
+		   ensure!(Proofs::<T>::contains_key(&proof), Error::<T>::NoSuchProof);
+
+		   //存证是否调用者拥有
+		   let(owner, block_number) = Proofs::<T>::get(&proof);
+
+		   ensure!(sender == owner, Error::<T>::NotProofOwner);
+
+		   //纪录新的存证拥有者
+		   Proofs::<T>::insert(&proof, (&receiver, &block_number));
+
+		   //记录事件
+		   Self::deposit_event(RawEvent::ClaimTrans(sender, receiver, proof));
+	   }
 	}
 }
